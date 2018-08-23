@@ -1,6 +1,9 @@
-batch_size = 64  # Batch size for training.
+batch_size = 50  # Batch size for training.
 epochs = 10  # Number of epochs to train for.
 latent_dim = 256  # Latent dimensionality of the encoding space.
-num_samples = 10000  # Number of samples to train on.
+
 # Path to the data txt file on disk.
 data_path = 'rus.txt'
+
+sent_size = 60
+vec_size = 100

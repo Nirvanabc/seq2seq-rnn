@@ -1,0 +1,9 @@
+1. You should read this: https://arxiv.org/pdf/1609.08144.pdf
+   about google seq2seq
+
+2. https://www.kaggle.com/lystdo/lstm-with-word2vec-embeddings/code
+   LSTM word2vec classification
+
+3. https://github.com/keras-team/keras/blob/master/examples/lstm_seq2seq.py
+   seq2seq char level
+

@@ -2,9 +2,9 @@ from __future__ import print_function
 
 from keras.models import Model
 from keras.layers import Input, LSTM, Dense
-from keras.utils import plot_model
+# from keras.utils import plot_model
 import numpy as np
-
+from constants import *
 
 # Vectorize the data.
 input_texts = []
@@ -27,7 +27,7 @@ for line in lines[: min(num_samples, len(lines) - 1)]:
         for char in target_text:
             if char not in target_characters:
                 target_characters.add(char)
-                        
+
 
 input_characters = sorted(list(input_characters))
 target_characters = sorted(list(target_characters))
@@ -122,7 +122,7 @@ decoder_model = Model(
     [decoder_outputs] + decoder_states)
 
 
-plot_model(model, to_file='model.png', show_shapes=True)
+# plot_model(model, to_file='model.png', show_shapes=True)
 
 # Reverse-lookup token index to decode sequences back to
 # something readable.
