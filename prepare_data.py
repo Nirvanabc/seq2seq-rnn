@@ -1,7 +1,7 @@
 import struct
 import re
 import numpy as np
-from numpy.random import normal
+from numpy import random
 from random import shuffle
 import pickle
 from constants import *
@@ -39,17 +39,12 @@ def get_dict(dict_file):
     return result_dict, col
 
 
-def normalize(vec):
-    total = sum(vec)
-    return list(map(lambda x: x/total, vec))
-
-
 def word2vec(dictionary, word, vec_size):
     try:
         result = dictionary[word]
         return result
     except KeyError:
-        new_vec = normalize(normal(size = vec_size))
+        new_vec = random.uniform(-1, 1, size = vec_size)
         result = dictionary[word] = new_vec
         return result
 
@@ -62,7 +57,7 @@ def corpora2vec(dictionary, corpora, vec_size):
             # curr.append(word2vec(dictionary, word, vec_size))
             # to test without softlink_ru (you also need to
             # comment the last line of this file)
-            curr.append(normalize(normal(size = vec_size)))
+            curr.append(random.uniform(-1, 1, size = vec_size))
         result.append(curr)
     return result
 
@@ -120,6 +115,15 @@ def get_data_seq2seq(corpora_file):
     return input_texts, target_texts
 
 
+def prepare_input_string(input_string):
+    enc_texts = input_string.split()
+    enc_texts_vec = prepare_corpora(enc_dict,
+                                    enc_texts,
+                                    enc_vec_size,
+                                    enc_sent_size)
+    return enc_texts_vec
+
+    
 def next_batch_keras(input_texts, target_texts, n,
                      enc_vec_size, dec_vec_size,
                      enc_sent_size, dec_sent_size,

@@ -1,3 +1,6 @@
+It shows equal loss on all iterations. see your generators.
+
+
 1. You should read this: https://arxiv.org/pdf/1609.08144.pdf
    about google seq2seq
 

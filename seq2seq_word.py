@@ -50,37 +50,33 @@ test_batch_gen = next_batch_keras(input_texts,
                                   dec_sent_size,
                                   tokenizer)
 
-# val_batch_gen = next_batch_keras(input_texts,
-#                                   target_texts,
-#                                   batch_size,
-#                                   enc_vec_size,
-#                                   dec_vec_size,
-#                                   enc_sent_size,
-#                                   dec_sent_size,
-#                                   tokenizer)
-plot_model(model, to_file='model.png', show_shapes=True)
+# plot_model(model, to_file='model.png', show_shapes=True)
 
-# here we see some magic, which comes from keras mistakes and
-# which is described in README in 4.
+# here we see some magic, which comes from keras mistakes
+# which are described in README 4.
 def sparse_cross_entropy(y_true, y_pred):
-    loss = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=y_true,
-                                                          logits=y_pred)
+    loss = tf.nn.sparse_softmax_cross_entropy_with_logits(
+        labels=y_true,
+        logits=y_pred)
     loss_mean = tf.reduce_mean(loss)
     return loss_mean
 
 decoder_target = tf.placeholder(dtype='int32', shape=(None, None))
 
-model.compile(optimizer='adam',
+model.compile(optimizer='nadam',
               loss=sparse_cross_entropy,
               target_tensors=[decoder_target])
 
+# magic ends
+
 model.fit_generator(test_batch_gen,
-                    steps_per_epoch=steps_per_epoch,
-                    epochs=epochs,
-                    verbose=2)
+                    steps_per_epoch = steps_per_epoch,
+                    epochs = epochs,
+                    verbose = 2)
 
 # Save model
-# This line doesn't work, follow this tread until they solve this problem.
+# This line doesn't work, follow this tread until they
+# solve this problem.
 # model.save('s2s.h5')
 
 # Next: inference mode (sampling).
@@ -108,57 +104,38 @@ decoder_model = Model(
     [decoder_outputs] + decoder_states)
 
 
-# Reverse-lookup token index to decode sequences back to
-# something readable.
-
-# reverse_input_char_index = dict(
-#     (i, char) for char, i in input_token_index.items())
-# reverse_target_char_index = dict(
-#     (i, char) for char, i in target_token_index.items())
-
-def decode_sequence(input_seq):
-    # Encode the input as state vectors.
-    states_value = encoder_model.predict(input_seq)
-    
-    # Generate empty target sequence of length 1.
-    target_seq = np.zeros((1, 1, num_decoder_tokens))
-    # Populate the first character of target sequence with the start character.
-    target_seq[0, 0, target_token_index['\t']] = 1.
-    
-    # Sampling loop for a batch of sequences
-    # (to simplify, here we assume a batch of size 1).
+def decode_sequence(input_string):
+    input_seq = prepare_input_string(input_string)
+    states_value = encoder_model.predict([input_seq])
+    target_seq = np.zeros((1, dec_sent_size, dec_vec_size))
+    target_seq[0, 0] = random.uniform(-1, 1, size = dec_vec_size)
     stop_condition = False
     decoded_sentence = ''
+
     while not stop_condition:
         output_tokens, h, c = decoder_model.predict(
             [target_seq] + states_value)
-        # Sample a token
         sampled_token_index = np.argmax(output_tokens[0, -1, :])
-        sampled_char = reverse_target_char_index[sampled_token_index]
-        decoded_sentence += sampled_char
-
-        # Exit condition: either hit max length
-        # or find stop character.
-        if (sampled_char == '\n' or
-            len(decoded_sentence) > max_decoder_seq_length):
+        sampled_word = tokenizer.index_word[
+            sampled_token_index + 1]
+        decoded_sentence += " " + sampled_word + " "
+        if (sampled_word == 'end' or
+            len(decoded_sentence.split()) > dec_sent_size):
             stop_condition = True
-
+            
         # Update the target sequence (of length 1).
-        target_seq = np.zeros((1, 1, num_decoder_tokens))
-        target_seq[0, 0, sampled_token_index] = 1.
-        
+        target_seq[0, 0] = random.uniform(-1, 1,
+                                          size = dec_vec_size)
         # Update states
         states_value = [h, c]
-
+        
     return decoded_sentence
+        
 
-
-# for seq_index in range(100):
-#     # Take one sequence (part of the training set)
-#     # for trying out decoding.
-#     input_seq = encoder_input_data[seq_index: seq_index + 1]
-#     decoded_sentence = decode_sequence(input_seq)
-#     print('-')
-#     print('Input sentence:', input_texts[seq_index])
-#     print('Decoded sentence:', decoded_sentence)
-    
+for seq_index in range(10):
+    # seq_index = 0
+    input_seq = input_texts[seq_index + 100: seq_index + 101][0]
+    decoded_sentence = decode_sequence(input_seq)
+    print('-')
+    print('Input sentence:', input_texts[seq_index])
+    print('Decoded sentence:', decoded_sentence)

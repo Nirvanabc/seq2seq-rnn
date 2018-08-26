@@ -41,24 +41,27 @@ input_token_index = dict(
 target_token_index = dict(
     [(char, i) for i, char in enumerate(target_characters)])
 
-encoder_input_data = np.zeros(
-    (len(input_texts),
-     max_encoder_seq_length,
-     num_encoder_tokens),
-    dtype='float32')
-decoder_input_data = np.zeros(
-    (len(input_texts), max_decoder_seq_length, num_decoder_tokens),
-    dtype='float32')
-decoder_target_data = np.zeros(
-    (len(input_texts), max_decoder_seq_length, num_decoder_tokens),
-    dtype='float32')
+encoder_input_data = np.zeros((len(input_texts),
+                               max_encoder_seq_length,
+                               num_encoder_tokens),
+                              dtype='float32')
+decoder_input_data = np.zeros((len(input_texts),
+                               max_decoder_seq_length,
+                               num_decoder_tokens),
+                              dtype='float32')
+decoder_target_data = np.zeros((len(input_texts),
+                                max_decoder_seq_length,
+                                num_decoder_tokens),
+                               dtype='float32')
 
 
-for i, (input_text, target_text) in enumerate(zip(input_texts, target_texts)):
+for i, (input_text, target_text) in enumerate(zip(input_texts,
+                                                  target_texts)):
     for t, char in enumerate(input_text):
         encoder_input_data[i, t, input_token_index[char]] = 1.
     for t, char in enumerate(target_text):
-        # decoder_target_data is ahead of decoder_input_data by one timestep
+        # decoder_target_data is ahead of decoder_input_data
+        # by one timestep
         decoder_input_data[i, t, target_token_index[char]] = 1.
         if t > 0:
             # decoder_target_data will be ahead by one timestep
@@ -137,7 +140,8 @@ def decode_sequence(input_seq):
     
     # Generate empty target sequence of length 1.
     target_seq = np.zeros((1, 1, num_decoder_tokens))
-    # Populate the first character of target sequence with the start character.
+    # Populate the first character of target
+    # sequence with the start character.
     target_seq[0, 0, target_token_index['\t']] = 1.
     
     # Sampling loop for a batch of sequences
