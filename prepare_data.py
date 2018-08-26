@@ -6,6 +6,7 @@ from random import shuffle
 import pickle
 from constants import *
 import gensim
+from keras.preprocessing.sequence import pad_sequences
 
 def read_word_and_its_vec(opened_file, vec_len):
     try:
@@ -43,7 +44,7 @@ def normalize(vec):
     return list(map(lambda x: x/total, vec))
 
 
-def word2vec(word, vec_size):
+def word2vec(dictionary, word, vec_size):
     try:
         result = dictionary[word]
         return result
@@ -53,12 +54,12 @@ def word2vec(word, vec_size):
         return result
 
 
-def corpora2vec(corpora, vec_size):
+def corpora2vec(dictionary, corpora, vec_size):
     result = []
     for sent in corpora:
         curr = []
         for word in sent:
-            # curr.append(word2vec(word, vec_size))
+            # curr.append(word2vec(dictionary, word, vec_size))
             # to test without softlink_ru (you also need to
             # comment the last line of this file)
             curr.append(normalize(normal(size = vec_size)))
@@ -83,13 +84,15 @@ def padd_corpora(corpora, vec_size, sent_size):
     return res_corpora
 
 
-def prepare_corpora(corpora, vec_size, \
+def prepare_corpora(dictionary, corpora, vec_size, \
                     sent_size):
     '''
     takes a batch and prepare it
+    corpora: list of words
+
     '''
     # corpora = del_empty(corpora)
-    vec_dictionary = corpora2vec(corpora, vec_size)
+    vec_dictionary = corpora2vec(dictionary, corpora, vec_size)
     vec_dictionary = padd_corpora(vec_dictionary, \
                                   vec_size,       \
                                   sent_size)
@@ -100,94 +103,51 @@ def rand(vec_size):
     return normalize(normal(size = vec_size))
 
 
-def next_batch_keras(corpora_file, n, vec_size):
+def get_data_seq2seq(corpora_file):
+    input_texts = []
+    target_texts = []
+    corpora = open(corpora_file, 'r', encoding='utf-8')
+    lines = corpora.read().split('\n')
+    i = 0
+    for line in lines:
+        try:
+            input_text, target_text = line.split('\t')
+        except ValueError:
+            pass
+        target_text = 'START_ ' + target_text[:-1] + ' _END'
+        input_texts.append(input_text)
+        target_texts.append(target_text)
+    return input_texts, target_texts
+
+
+def next_batch_keras(input_texts, target_texts, n,
+                     enc_vec_size, dec_vec_size,
+                     enc_sent_size, dec_sent_size,
+                     tokenizer):
     '''
     for keras eng-rus files (seq2seq lstm word2vec)
     '''
-    corpora = open(corpora_file, 'r', encoding='utf-8')
     while True:
-        input_texts = []
-        target_texts = []
-        for _ in range(n):
-            line = corpora.readline()
-            if len(line) == 0:
-                corpora = open(corpora_file, 'r',
-                               encoding='utf-8')
-                line = corpora.readline()
-            input_text, target_text = line.split('\t')
-            target_text = 'START_ ' + target_text[:-1] + ' _END'
-            input_texts.append(input_text)
-            target_texts.append(target_text)
-        input_texts = prepare_corpora(input_text,
-                                      vec_size,
-                                      sent_size)
-        target_texts = prepare_corpora(target_text,
-                                       vec_size,
-                                       sent_size)
-            
-        yield input_texts, target_texts
-            
+        i = 0
+        while i < len(input_texts):
+            enc_texts = [sent.split() for sent in input_texts[i:i+n]]
+            dec_texts = [sent.split() for sent in target_texts[i:i+n]]
+            enc_texts_vec = prepare_corpora(enc_dict,
+                                            enc_texts,
+                                            enc_vec_size,
+                                            enc_sent_size)
+            dec_texts_vec = prepare_corpora(dec_dict,
+                                            dec_texts,
+                                            dec_vec_size,
+                                            dec_sent_size)
+            target = [i[1:] for i in dec_texts]
+            target = tokenizer.texts_to_sequences(target)
+            target = pad_sequences(target, maxlen=dec_sent_size)
+            yield [np.array(enc_texts_vec),
+                   np.array(dec_texts_vec)], target
+            i += n
 
-def next_batch(corpora_file, n, vec_size):
-    '''
-    input:
-    corpora_file: file path
-    n: size of returned batch
-    
-    return:
-    batch of size n
-    or StopIteration when reach the end
-    of the file
-    '''
-    
-    corpora = open(corpora_file, 'r')
-    # until we reach the end of file
-    while True:
-        batch = []
-        labels = []
-        for _ in range(n):
-            sent = corpora.readline()
-            if len(sent) == 0:
-                return
-            sent = sent.split()
-            if sent[:-1] != []:
-                labels.append(int(sent[-1]))
-                batch.append(sent[:-1])
-        batch = prepare_corpora(batch, vec_size, sent_size)
-        labels = [[1 - labels[i],
-                   labels[i]] for i in range(len(labels))]
-        batch = [batch, labels]
-        yield batch
-        
 
-def generate_arrays_from_file(corpora_file, n = batch_size):
-    '''
-    for keras model.fit_generator
-    '''
-    
-    corpora = open(corpora_file, 'r')
-    
-    # until we reach the end of file
-    while True:
-        batch = []
-        labels = []
-        for _ in range(n):
-            sent = corpora.readline()
-            if len(sent) == 0:
-                corpora = open(corpora_file, 'r')
-                sent = corpora.readline()
-            sent = sent.split()
-            if sent[:-1] != []:
-                labels.append(int(sent[-1]))
-                batch.append(sent[:-1])
-        batch = np.array(prepare_corpora(batch,
-                                         vec_size,
-                                         sent_size))
-        labels = np.array([[1 - labels[i],
-                   labels[i]] for i in range(len(labels))])
-        yield(batch, labels)
-            
-        
 # # building a dictionary
 # model = gensim.models.KeyedVectors.load_word2vec_format(
 #     './softlink_en_big', binary=True)
@@ -196,4 +156,8 @@ def generate_arrays_from_file(corpora_file, n = batch_size):
 #     if str.isalpha(key):
 #         dictionary[key.lower()] = model.wv[key]
 
-# dictionary, vec_size = get_dict(en_dict_source)
+# for testing without dictionaries
+enc_dict = dec_dict = []
+
+# enc_dict, enc_vec_size = get_dict(en_dict_source)
+# dec_dict, dec_vec_size = get_dict(ru_dict_source)

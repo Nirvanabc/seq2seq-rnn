@@ -7,3 +7,5 @@
 3. https://github.com/keras-team/keras/blob/master/examples/lstm_seq2seq.py
    seq2seq char level
 
+4. https://github.com/Hvass-Labs/TensorFlow-Tutorials/blob/master/21_Machine_Translation.ipynb
+   a good tutorial from tf and keras (there are many tutorials there) and with explanation of some keras mistakes about sparse_cross_entropy
