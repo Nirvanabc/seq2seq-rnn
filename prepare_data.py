@@ -54,10 +54,10 @@ def corpora2vec(dictionary, corpora, vec_size):
     for sent in corpora:
         curr = []
         for word in sent:
-            # curr.append(word2vec(dictionary, word, vec_size))
+            curr.append(word2vec(dictionary, word, vec_size))
             # to test without softlink_ru (you also need to
             # comment the last line of this file)
-            curr.append(random.uniform(-1, 1, size = vec_size))
+            # curr.append(random.uniform(-1, 1, size = vec_size))
         result.append(curr)
     return result
 
@@ -109,7 +109,7 @@ def get_data_seq2seq(corpora_file):
             input_text, target_text = line.split('\t')
         except ValueError:
             pass
-        target_text = 'START_ ' + target_text[:-1] + ' _END'
+        target_text = 'SSTTAARRTT ' + target_text[:-1] + ' EENNDD'
         input_texts.append(input_text)
         target_texts.append(target_text)
     return input_texts, target_texts
@@ -163,5 +163,7 @@ def next_batch_keras(input_texts, target_texts, n,
 # for testing without dictionaries
 enc_dict = dec_dict = []
 
-# enc_dict, enc_vec_size = get_dict(en_dict_source)
-# dec_dict, dec_vec_size = get_dict(ru_dict_source)
+
+# comment this to test the model without dictionary
+enc_dict, enc_vec_size = get_dict(en_dict_source)
+dec_dict, dec_vec_size = get_dict(ru_dict_source)

@@ -69,15 +69,29 @@ model.compile(optimizer='nadam',
 
 # magic ends
 
+# Save model
+callback_checkpoint = ModelCheckpoint(filepath=path_checkpoint,
+                                      monitor='loss',
+                                      verbose=1,
+                                      save_weights_only=True,
+                                      save_best_only=True)
+
+
 model.fit_generator(test_batch_gen,
                     steps_per_epoch = steps_per_epoch,
                     epochs = epochs,
-                    verbose = 2)
+                    verbose = 2,
+                    callbacks=[callback_checkpoint])
 
-# Save model
-# This line doesn't work, follow this tread until they
-# solve this problem.
-# model.save('s2s.h5')
+
+
+# restore the model
+try:
+    model.load_weights(path_checkpoint)
+except Exception as error:
+    print("Error trying to load checkpoint.")
+    print(error)
+
 
 # Next: inference mode (sampling).
 # Here's the drill:
@@ -108,7 +122,11 @@ def decode_sequence(input_string):
     input_seq = prepare_input_string(input_string)
     states_value = encoder_model.predict([input_seq])
     target_seq = np.zeros((1, dec_sent_size, dec_vec_size))
-    target_seq[0, 0] = random.uniform(-1, 1, size = dec_vec_size)
+    target_seq[0, 0] = word2vec(dec_dict,
+                                "ssttaarrtt",
+                                dec_vec_size)
+    # target_seq[0, 0] = random.uniform(-1, 1,
+    #                                   size = dec_vec_size)
     stop_condition = False
     decoded_sentence = ''
 
@@ -119,13 +137,16 @@ def decode_sequence(input_string):
         sampled_word = tokenizer.index_word[
             sampled_token_index + 1]
         decoded_sentence += " " + sampled_word + " "
-        if (sampled_word == 'end' or
+        if (sampled_word == 'eenndd' or
             len(decoded_sentence.split()) > dec_sent_size):
             stop_condition = True
             
         # Update the target sequence (of length 1).
-        target_seq[0, 0] = random.uniform(-1, 1,
-                                          size = dec_vec_size)
+        target_seq[0, 0] = word2vec(dec_dict,
+                                    sampled_word,
+                                    dec_vec_size)
+        # target_seq[0, 0] = random.uniform(-1, 1,
+        #                                   size = dec_vec_size)
         # Update states
         states_value = [h, c]
         
