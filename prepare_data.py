@@ -54,10 +54,10 @@ def corpora2vec(dictionary, corpora, vec_size):
     for sent in corpora:
         curr = []
         for word in sent:
-            curr.append(word2vec(dictionary, word, vec_size))
+            # curr.append(word2vec(dictionary, word, vec_size))
             # to test without softlink_ru (you also need to
             # comment the last line of this file)
-            # curr.append(random.uniform(-1, 1, size = vec_size))
+            curr.append(random.uniform(-1, 1, size = vec_size))
         result.append(curr)
     return result
 
@@ -165,5 +165,5 @@ enc_dict = dec_dict = []
 
 
 # comment this to test the model without dictionary
-enc_dict, enc_vec_size = get_dict(en_dict_source)
-dec_dict, dec_vec_size = get_dict(ru_dict_source)
+# enc_dict, enc_vec_size = get_dict(en_dict_source)
+# dec_dict, dec_vec_size = get_dict(ru_dict_source)

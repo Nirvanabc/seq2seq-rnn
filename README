@@ -1,4 +1,8 @@
-It shows equal loss on all iterations. see your generators.
+It predicts only start start start ...
+either after random word2vec or after several hours of training
+on real word2vec with two dictionaries.
+
+write decorator to switch between random and real types of learning
 
 
 1. You should read this: https://arxiv.org/pdf/1609.08144.pdf
@@ -11,4 +15,5 @@ It shows equal loss on all iterations. see your generators.
    seq2seq char level
 
 4. https://github.com/Hvass-Labs/TensorFlow-Tutorials/blob/master/21_Machine_Translation.ipynb
-   a good tutorial from tf and keras (there are many tutorials there) and with explanation of some keras mistakes about sparse_cross_entropy
+   a good tutorial from tf and keras (there are many tutorials there) and with explanation of
+   some keras mistakes about sparse_cross_entropy
