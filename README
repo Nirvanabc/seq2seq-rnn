@@ -1,8 +1,16 @@
+rewrite num_words to be different for two languages
+
+
+my_keras.py -- some helpful functions to use keras
+
+
+
 It predicts only start start start ...
 either after random word2vec or after several hours of training
 on real word2vec with two dictionaries.
 
-write decorator to switch between random and real types of learning
+write decorator to switch between random and real
+types of learning
 
 
 1. You should read this: https://arxiv.org/pdf/1609.08144.pdf
@@ -17,3 +25,6 @@ write decorator to switch between random and real types of learning
 4. https://github.com/Hvass-Labs/TensorFlow-Tutorials/blob/master/21_Machine_Translation.ipynb
    a good tutorial from tf and keras (there are many tutorials there) and with explanation of
    some keras mistakes about sparse_cross_entropy
+
+5. https://github.com/keras-team/keras/blob/master/examples/lstm_seq2seq.py -- lstm mashine
+   translation (unfortunately, character level)

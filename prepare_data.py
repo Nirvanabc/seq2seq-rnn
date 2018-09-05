@@ -65,7 +65,7 @@ def corpora2vec(dictionary, corpora, vec_size):
 def padd_sent(sent, vec_size, sent_size):
     res_sent = np.zeros([sent_size, vec_size])
     if len(sent) <= sent_size:
-        res_sent[sent_size - len(sent):] = sent
+        res_sent[:len(sent)] = sent
     else: res_sent = sent[:sent_size]
     return res_sent
 
@@ -109,7 +109,7 @@ def get_data_seq2seq(corpora_file):
             input_text, target_text = line.split('\t')
         except ValueError:
             pass
-        target_text = 'SSTTAARRTT ' + target_text[:-1] + ' EENNDD'
+        target_text = start_word + target_text[:-1] + end_word
         input_texts.append(input_text)
         target_texts.append(target_text)
     return input_texts, target_texts
@@ -146,9 +146,12 @@ def next_batch_keras(input_texts, target_texts, n,
                                             dec_sent_size)
             target = [i[1:] for i in dec_texts]
             target = tokenizer.texts_to_sequences(target)
-            target = pad_sequences(target, maxlen=dec_sent_size)
-            yield [np.array(enc_texts_vec),
-                   np.array(dec_texts_vec)], target
+            target = pad_sequences(target,
+                                   maxlen=dec_sent_size,
+                                   padding='post',
+                                   truncating='post')
+            yield [np.array(enc_texts),
+                   np.array(dec_texts)], target
             i += n
 
 

@@ -92,11 +92,11 @@ decoder_outputs = decoder_dense(decoder_outputs)
 model = Model([encoder_inputs, decoder_inputs], decoder_outputs)
 
 # Run training
-# model.compile(optimizer='rmsprop', loss='categorical_crossentropy')
-# model.fit([encoder_input_data, decoder_input_data], decoder_target_data,
-#                     batch_size=batch_size,
-#                     epochs=epochs,
-#                     validation_split=0.2)
+model.compile(optimizer='rmsprop', loss='categorical_crossentropy')
+model.fit([encoder_input_data, decoder_input_data], decoder_target_data,
+                    batch_size=batch_size,
+                    epochs=epochs,
+                    validation_split=0.2)
 # Save model
 # This line doesn't work, follow this tread until they solve this problem.
 # model.save('s2s.h5')

@@ -1,4 +1,3 @@
-from __future__ import print_function
 import tensorflow as tf
 from keras.models import Model
 from keras.layers import Input, LSTM, Dense, Embedding
@@ -6,7 +5,6 @@ import numpy as np
 from constants import *
 from prepare_data import *
 from keras.preprocessing.text import Tokenizer
-from keras.preprocessing.sequence import pad_sequences
 from keras.callbacks import EarlyStopping, ModelCheckpoint
 from keras.utils import plot_model
 
@@ -18,15 +16,15 @@ word_index = tokenizer.word_index
 nb_words = min(max_nb_words, len(word_index))+1
 
 # Define an input sequence and process it.
-encoder_inputs = Input(shape=(enc_sent_size, enc_vec_size))
+encoder_inputs = Input(shape=(None, enc_vec_size))
 
-encoder = LSTM(latent_dim, return_state=True)
-encoder_outputs, state_h, state_c = encoder(encoder_inputs)
+encoder_lstm = LSTM(latent_dim, return_state=True)
+encoder_outputs, state_h, state_c = encoder_lstm(encoder_inputs)
 # We discard `encoder_outputs` and only keep the states.
 encoder_states = [state_h, state_c]
 
 # Set up the decoder, using `encoder_states` as initial state.
-decoder_inputs = Input(shape=(dec_sent_size, dec_vec_size))
+decoder_inputs = Input(shape=(None, dec_vec_size))
 decoder_lstm = LSTM(latent_dim, return_sequences=True,
                     return_state=True)
 decoder_outputs, _, _ = decoder_lstm(decoder_inputs,
@@ -80,8 +78,8 @@ callback_checkpoint = ModelCheckpoint(filepath=path_checkpoint,
 model.fit_generator(test_batch_gen,
                     steps_per_epoch = steps_per_epoch,
                     epochs = epochs,
-                    verbose = 2,
-                    callbacks=[callback_checkpoint])
+                    verbose = 2)
+                    # callbacks=[callback_checkpoint])
 
 
 
@@ -121,7 +119,7 @@ decoder_model = Model(
 def decode_sequence(input_string):
     input_seq = prepare_input_string(input_string)
     states_value = encoder_model.predict([input_seq])
-    target_seq = np.zeros((1, dec_sent_size, dec_vec_size))
+    target_seq = np.zeros((1, 1, dec_vec_size))
     # target_seq[0, 0] = word2vec(dec_dict,
     #                             "ssttaarrtt",
     #                             dec_vec_size)
@@ -136,7 +134,7 @@ def decode_sequence(input_string):
         sampled_token_index = np.argmax(output_tokens[0, -1, :])
         sampled_word = tokenizer.index_word[
             sampled_token_index + 1]
-        decoded_sentence += " " + sampled_word + " "
+        decoded_sentence += " " + sampled_word
         if (sampled_word == 'eenndd' or
             len(decoded_sentence.split()) > dec_sent_size):
             stop_condition = True
@@ -155,8 +153,8 @@ def decode_sequence(input_string):
 
 for seq_index in range(10):
     # seq_index = 0
-    input_seq = input_texts[seq_index + 100: seq_index + 101][0]
-    decoded_sentence = decode_sequence(input_seq)
+    input_string = input_texts[seq_index + 10000: seq_index + 10001][0]
+    decoded_sentence = decode_sequence(input_string)
     print('-')
-    print('Input sentence:', input_texts[seq_index])
+    print('Input sentence:', input_texts[seq_index + 100])
     print('Decoded sentence:', decoded_sentence)
